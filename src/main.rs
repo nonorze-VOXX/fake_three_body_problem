@@ -1,82 +1,29 @@
-use std::collections::VecDeque;
+use bevy::{prelude::*, render::render_resource::resource_macros, window::close_on_esc};
+use bevy_egui::{egui, EguiContexts, EguiPlugin};
 
-use bevy::{prelude::*, reflect::List};
-use bevy_egui::{
-    egui::{self, Pos2},
-    EguiContexts, EguiPlugin,
-};
-
-const BACKGROUND_COLOR: Color = Color::rgb(0.9, 0.9, 0.9);
-// const BOX_OLOR: Color = Color::rgb(0.3, 0.3, 0.7);
 fn main() {
-    println!("Hello, world!");
-
-    let _run = App::new()
-        .add_plugins((DefaultPlugins
-            .set(WindowPlugin {
-                primary_window: Some(Window { ..default() }),
-                ..default()
-            })
-            .set(ImagePlugin::default_nearest()),))
+    App::new()
+        .add_plugins(DefaultPlugins)
         .add_plugins(EguiPlugin)
-        .insert_resource(ClearColor(BACKGROUND_COLOR))
-        .add_systems(Startup, setup)
-        .insert_resource(Task::new())
-        .add_systems(Update, displayByUi)
-        .add_systems(Update, bevy::window::close_on_esc)
+        // Systems that create Egui widgets should be run during the `CoreSet::Update` set,
+        // or after the `EguiSet::BeginFrame` system (which belongs to the `CoreSet::PreUpdate` set).
+        .add_systems(Startup, add_Task)
+        .add_systems(Update, show_task)
+        .add_systems(Update, close_on_esc)
         .run();
 }
 
-#[derive(Resource)]
-pub struct Task {
-    id: i32,
-    name: VecDeque<String>,
-    op: Option<String>,
-}
-impl Task {
-    pub fn new() -> Self {
-        Self {
-            id: 10,
-            name: VecDeque::new(),
-            op: Some(String::from("s")),
-        }
-    }
-    pub fn change_id(&mut self, new_id: i32) {
-        self.id = new_id;
-    }
-    pub fn add(&mut self, text: String) {
-        self.name.push_back(text);
-    }
-}
-fn displayByUi(mut contexts: EguiContexts, mut task: ResMut<Task>) {
-    const WIN_WIDTH: f32 = 300.0;
-    const WIN_HEIGHT: f32 = 100.0;
-    if (task.name.is_empty()) {
-        task.add(String::from("amogus"));
-    }
-    if (task.op.is_none()) {
-        task.op = task.name.pop_front();
-    }
-    egui::Window::new("test")
-        .default_pos(Pos2 { x: 0.0, y: 0.0 })
-        .resizable(false)
-        .title_bar(true)
-        .constrain(false)
-        .movable(true)
-        .show(contexts.ctx_mut(), |ui| {
-            ui.set_width(WIN_WIDTH);
-            ui.set_max_height(WIN_HEIGHT);
-            ui.horizontal(|ui| {
-                ui.add_space(10.0);
-                let text = egui::Label::new(task.op.as_ref().unwrap()).wrap(true);
-                let height = ui.add(text).rect.size().y;
-                ui.set_max_height(height);
-            });
+fn show_task(mut contexts: EguiContexts, query: Query<&Task>) {
+    for task in &query {
+        egui::Window::new(task.0.to_string()).show(contexts.ctx_mut(), |ui| {
+            ui.label(task.0.to_string());
         });
+    }
 }
-
-fn setup(mut commands: Commands) {
-    commands.spawn(Camera2dBundle::default());
-
-    // commands.spawn();
+#[derive(Component)]
+struct Task(String);
+fn add_Task(mut commands: Commands) {
+    commands.spawn((Task("Elaina Proctor".to_string())));
+    commands.spawn((Task("Renzo Hume".to_string())));
+    commands.spawn((Task("Zayna Nieves".to_string())));
 }
