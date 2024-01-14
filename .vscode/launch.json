@@ -1,0 +1,61 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug executable 'idle_on_planner'",
+            "cargo": {
+                "args": [
+                    "run"
+                ],
+                "filter": {
+                    "name": "idle_on_planner",
+                    "kind": "bin"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "build",
+            "name": "Debug executable 'idle_on_planner'",
+            "cargo": {
+                "args": [
+                    "build",
+                    "--bin=idle_on_planner",
+                    "--package=idle_on_planner"
+                ],
+                "filter": {
+                    "name": "idle_on_planner",
+                    "kind": "bin"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug unit tests in executable 'idle_on_planner'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--bin=idle_on_planner",
+                    "--package=idle_on_planner"
+                ],
+                "filter": {
+                    "name": "idle_on_planner",
+                    "kind": "bin"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        }
+    ]
+}
