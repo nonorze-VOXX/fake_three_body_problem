@@ -2,6 +2,10 @@ use bevy::{
     transform::{self, commands},
     window::PrimaryWindow,
 };
+use game_object::{
+    game_object::GameObjectBundle,
+    mouse_controller::{MouseComponent, MousePlugin},
+};
 use std::{borrow::Borrow, fs::copy, string};
 
 use bevy::{
@@ -14,21 +18,22 @@ use bevy::{
     sprite,
     window::close_on_esc,
 };
+mod game_object;
 
 fn main() {
     App::new()
         .add_plugins(DefaultPlugins)
-        // Systems that create Egui widgets should be run during the `CoreSet::Update` set,
-        // or after the `EguiSet::BeginFrame` system (which belongs to the `CoreSet::PreUpdate` set).
+        .add_plugins(MousePlugin)
         .add_systems(Startup, create_world)
         .add_systems(Startup, create_a_button)
         .add_systems(Update, close_on_esc)
-        .add_systems(Update, move_card)
-        // .add_systems(Update, )
-        .add_systems(Update, update_kanban_button)
-        .add_systems(Update, handle_click_card)
-        .add_systems(Update, clear_trigger)
+        .add_systems(Update, update)
         .run();
+}
+fn update(mut query: Query<(&mut Sprite, &mut MouseComponent)>) {
+    // query.iter_mut().for_each(|(mut sprite, ouseComponent)| {
+    //     println!("find sprite and mouse component");
+    // })
 }
 fn update_kanban_button(
     mut query: Query<(&Transform, &Sprite, &mut KanbanButton)>,
@@ -42,7 +47,7 @@ fn clear_trigger(mut query: Query<&mut KanbanButton>, mut commands: Commands) {
     query.iter_mut().for_each(|mut card| {
         if card.trigger {
             create_a_card(&mut commands);
-            println!("triggered");
+            // println!("triggered");
             card.trigger = false;
         }
     })
@@ -91,21 +96,10 @@ fn update_button_press(
 }
 fn create_world(mut commands: Commands) {
     commands.spawn(Camera2dBundle::default());
-    create_a_card(&mut commands);
+    //  create_a_card(&mut commands);
 }
 fn create_a_button(mut commands: Commands) {
-    commands.spawn((
-        SpriteBundle {
-            sprite: Sprite {
-                color: Color::rgb(0.25, 0.25, 0.75),
-                custom_size: Some(Vec2::new(50.0, 50.0)),
-                ..default()
-            },
-            transform: Transform::from_translation(Vec3::new(50., 0., 0.)),
-            ..default()
-        },
-        KanbanButton { ..default() },
-    ));
+    commands.spawn(GameObjectBundle::default());
 }
 
 fn create_a_card(commands: &mut Commands) {

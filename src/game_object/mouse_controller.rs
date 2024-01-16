@@ -1,4 +1,4 @@
-use crate::game_object::game_object::GameObject;
+use crate::game_object::game_object::GameObjectBundle;
 use bevy::{
     ecs::{component::Component, system::Query},
     math::Vec2,
@@ -6,6 +6,15 @@ use bevy::{
     transform,
     window::PrimaryWindow,
 };
+pub struct MousePlugin;
+
+impl Plugin for MousePlugin {
+    fn build(&self, app: &mut App) {
+        app.add_systems(Update, update_hover)
+            .add_systems(Update, update_click)
+            .add_systems(Update, debug_click);
+    }
+}
 
 #[derive(Component)]
 pub struct MouseComponent {
@@ -24,9 +33,24 @@ impl Default for MouseComponent {
         }
     }
 }
+
+fn debug_click(mut query: Query<(&mut Sprite, &mut MouseComponent)>) {
+    query.iter_mut().for_each(|(mut sprite, ouseComponent)| {
+        //println!("find sprite and mouse component");
+        if (ouseComponent.upside_triggered) {
+            sprite.color = Color::RED;
+        } else if (ouseComponent.downside_triggered) {
+            sprite.color = Color::BLUE;
+        } else if (ouseComponent.clicked) {
+            sprite.color = Color::GREEN;
+        } else {
+            sprite.color = Color::WHITE;
+        }
+    })
+}
 fn update_click(
-    buttons: &Res<Input<MouseButton>>,
-    query: &mut Query<(&Transform, &Sprite, &mut MouseComponent)>,
+    buttons: Res<Input<MouseButton>>,
+    mut query: Query<(&Transform, &Sprite, &mut MouseComponent)>,
 ) {
     if buttons.just_pressed(MouseButton::Left) {
         query.iter_mut().for_each(|(_, _, mut mouse_component)| {
@@ -52,7 +76,7 @@ fn update_click(
 
 fn update_hover(
     q_windows: Query<&Window, With<PrimaryWindow>>,
-    query: &mut Query<(&Transform, &Sprite, &mut MouseComponent)>,
+    mut query: Query<(&Transform, &Sprite, &mut MouseComponent)>,
 ) {
     let cursor = q_windows.single().cursor_position();
     if cursor.is_none() {
