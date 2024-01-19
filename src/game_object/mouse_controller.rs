@@ -1,6 +1,7 @@
 use crate::game_object::game_object::GameObjectBundle;
 use bevy::{
-    ecs::{component::Component, system::Query},
+    ecs::{component::Component, entity, system::Query},
+    input::mouse,
     math::Vec2,
     prelude::*,
     transform,
@@ -11,13 +12,20 @@ pub struct MousePlugin;
 impl Plugin for MousePlugin {
     fn build(&self, app: &mut App) {
         app.add_event::<MouseClickEvent>()
+            .add_event::<MouseUpsideClickEvent>()
+            .add_event::<MouseDownsideClickEvent>()
             .add_systems(Update, update_hover)
-            .add_systems(Update, update_click)
+            .add_systems(Update, update_up_down)
             .add_systems(Update, update_touch)
-            .add_systems(Update, debug_click);
+            .add_systems(Update, debug_click)
+            .add_systems(Update, click_detect);
     }
 }
 
+#[derive(Event)]
+struct MouseUpsideClickEvent(Entity);
+#[derive(Event)]
+struct MouseDownsideClickEvent(Entity);
 #[derive(Event)]
 struct MouseClickEvent(Entity);
 #[derive(Component)]
@@ -26,6 +34,7 @@ pub struct MouseComponent {
     hover: bool,
     upside_triggered: bool,
     downside_triggered: bool,
+    trigger: bool,
 }
 impl Default for MouseComponent {
     fn default() -> Self {
@@ -34,6 +43,7 @@ impl Default for MouseComponent {
             hover: false,
             upside_triggered: false,
             downside_triggered: false,
+            trigger: false,
         }
     }
 }
@@ -54,20 +64,45 @@ fn debug_click(mut query: Query<(&mut Sprite, &mut MouseComponent)>) {
         }
     })
 }
-fn update_click(
+fn click_detect(
+    mut ev_up_click: EventReader<MouseUpsideClickEvent>,
+    mut ev_down_click: EventReader<MouseDownsideClickEvent>,
     mut ev_click: EventWriter<MouseClickEvent>,
+    mut query: Query<(Entity, &mut MouseComponent)>,
+) {
+    ev_up_click.read().for_each(|up_event| {
+        if let Ok(mut mouse) = query.get_component_mut::<MouseComponent>(up_event.0) {
+            mouse.trigger = true;
+        }
+    });
+    ev_down_click.read().for_each(|down_event| {
+        if let Ok(mut mouse) = query.get_component_mut::<MouseComponent>(down_event.0) {
+            if (mouse.trigger) {
+                ev_click.send(MouseClickEvent(down_event.0));
+                println!("clicked")
+            }
+            mouse.trigger = false;
+        }
+    });
+}
+fn update_up_down(
+    mut ev_down_click: EventWriter<MouseDownsideClickEvent>,
+    mut ev_up_click: EventWriter<MouseUpsideClickEvent>,
     buttons: Res<Input<MouseButton>>,
     mut query: Query<(Entity, &mut MouseComponent)>,
 ) {
     query.iter_mut().for_each(|(entity, mut mouse_component)| {
         let upside = buttons.just_pressed(MouseButton::Left) && mouse_component.hover;
+        if (upside) {
+            ev_up_click.send(MouseUpsideClickEvent(entity));
+        }
         mouse_component.upside_triggered = upside;
     });
     query.iter_mut().for_each(|(entity, mut mouse_component)| {
-        mouse_component.downside_triggered =
-            buttons.just_released(MouseButton::Left) && mouse_component.hover;
-        if (mouse_component.downside_triggered) {
-            ev_click.send(MouseClickEvent(entity));
+        let downside = buttons.just_released(MouseButton::Left) && mouse_component.hover;
+        mouse_component.downside_triggered = downside;
+        if (downside) {
+            ev_down_click.send(MouseDownsideClickEvent(entity));
         }
     });
 }
