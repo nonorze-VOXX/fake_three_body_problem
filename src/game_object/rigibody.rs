@@ -56,7 +56,6 @@ fn update_collider(time: Res<Time>, mut query: Query<(&mut Transform, &mut Rigib
 
         let x = (a.1.size.x / 2.0 + b.1.size.x / 2.0);
         let y = (a.1.size.y / 2.0 + b.1.size.y / 2.0);
-        println!("delta: {} , {}", a.1.velocity, b.1.velocity);
         if delta.x.abs() < (a.1.size.x / 2.0 + b.1.size.x / 2.0)
             && delta.y.abs() < (a.1.size.y / 2.0 + b.1.size.y / 2.0)
         {
@@ -70,8 +69,6 @@ fn update_collider(time: Res<Time>, mut query: Query<(&mut Transform, &mut Rigib
                     ((a.1.mass - b.1.mass) * past_v1 + (2.0 * b.1.mass) * past_v2) / (total_mass);
                 b.1.velocity.x =
                     ((2.0 * a.1.mass) * past_v1 + (b.1.mass - a.1.mass) * past_v2) / (total_mass);
-
-                println!("hitx");
             } else {
                 let past_v1 = a.1.velocity.y;
                 let past_v2 = b.1.velocity.y;
@@ -80,7 +77,6 @@ fn update_collider(time: Res<Time>, mut query: Query<(&mut Transform, &mut Rigib
                     ((a.1.mass - b.1.mass) * past_v1 + (2.0 * b.1.mass) * past_v2) / (total_mass);
                 b.1.velocity.y =
                     ((2.0 * a.1.mass) * past_v1 + (b.1.mass - a.1.mass) * past_v2) / (total_mass);
-                println!("hity");
             }
         }
     }
