@@ -5,10 +5,13 @@ use bevy::{
     prelude::*,
     window::PrimaryWindow,
 };
+
+use super::rigibody::Rigibody;
 #[derive(Bundle)]
 pub struct GameObjectBundle {
     pub sprite_bundle: SpriteBundle,
     pub mouse_component: MouseComponent,
+    pub rigibody: Rigibody,
 }
 
 impl Default for GameObjectBundle {
@@ -24,6 +27,7 @@ impl Default for GameObjectBundle {
                 ..default()
             },
             mouse_component: MouseComponent::default(),
+            rigibody: Rigibody::default(),
         }
     }
 }

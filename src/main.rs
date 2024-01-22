@@ -6,6 +6,7 @@ use bevy::{
 use game_object::{
     game_object::GameObjectBundle,
     mouse_controller::{MouseComponent, MousePlugin},
+    rigibody::{Rigibody, RigibodyPlugin},
 };
 use std::{borrow::Borrow, fs::copy, string};
 
@@ -25,6 +26,7 @@ fn main() {
     App::new()
         .add_plugins(DefaultPlugins)
         .add_plugins(MousePlugin)
+        .add_plugins(RigibodyPlugin)
         .add_systems(Startup, create_world)
         .add_systems(Startup, create_something)
         .add_systems(Update, close_on_esc)
@@ -53,13 +55,40 @@ struct GravityEffectEntity {}
 struct GravityReceiveEntity {}
 fn create_something(mut commands: Commands) {
     commands.spawn((
-        GameObjectBundle::default(),
+        GameObjectBundle {
+            sprite_bundle: SpriteBundle {
+                sprite: Sprite {
+                    color: Color::rgb(0.25, 0.25, 0.55),
+                    custom_size: Some(Vec2::new(50.0, 50.0)),
+                    ..default()
+                },
+                transform: Transform::from_translation(Vec3::new(-50., 0., 0.)),
+                ..default()
+            },
+            mouse_component: MouseComponent::default(),
+            rigibody: Rigibody::default(),
+        },
         Enemy {},
-        GravityReceiveEntity {},
-        GravityEffectEntity {},
+        // GravityReceiveEntity {},
+        // GravityEffectEntity {},
     ));
     commands.spawn((
-        GameObjectBundle::default(),
+        GameObjectBundle {
+            sprite_bundle: SpriteBundle {
+                sprite: Sprite {
+                    color: Color::rgb(0., 0., 0.),
+                    custom_size: Some(Vec2::new(50.0, 50.0)),
+                    ..default()
+                },
+                transform: Transform::from_translation(Vec3::new(50., 0., 0.)),
+                ..default()
+            },
+            mouse_component: MouseComponent::default(),
+            rigibody: Rigibody {
+                velocity: Vec3::new(0., 100., 0.),
+                ..default()
+            },
+        },
         Enemy {},
         GravityReceiveEntity {},
         GravityEffectEntity {},
@@ -78,6 +107,7 @@ fn update_gravity_receive(
         &mut Transform,
         &mut GravityEffectEntity,
         Option<&mut GravityReceiveEntity>,
+        &mut Rigibody,
     )>,
 ) {
     let mut c = query.iter_combinations_mut();
@@ -86,12 +116,10 @@ fn update_gravity_receive(
             let distance = a2.0.translation - a1.0.translation;
 
             if distance.length() > 0.0f32 {
-                let force = 1.0 / distance.length() * distance.length();
-                println!("force: {}", force);
-                // let a = force / 1.0;
-                // let delta = a * time.delta_seconds();
-                let g = 300.0;
-                a1.0.translation += distance.normalize() * force * g * time.delta_seconds();
+                // let forceValue = 50000.0 / (distance.length() * distance.length());
+                let forceValue = 1000000.0 / (distance.length() * distance.length());
+                let force = distance.normalize() * forceValue;
+                a1.3.add_force(force);
             }
         }
     }
